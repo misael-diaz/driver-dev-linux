@@ -1,7 +1,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 
-MODULE_LICENSE("GPL3-or-higher");
+MODULE_LICENSE("GPL");
 MODULE_AUTHOR("misael-diaz");
 MODULE_DESCRIPTION("Dynamically loadable Linux kernel module exercise");
 
