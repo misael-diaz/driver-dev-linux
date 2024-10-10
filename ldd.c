@@ -1,19 +1,45 @@
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/proc_fs.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("misael-diaz");
 MODULE_DESCRIPTION("Dynamically loadable Linux kernel module exercise");
 
+/*
+struct proc_dir_entry *proc_create(const char *name,
+				   umode_t mode,
+				   struct proc_dir_entry *parent,
+				   const struct file_operations *file_operations);
+*/
+
+static struct proc_dir_entry *custom_proc_node;
+static struct file_operations *driver_file_operations;
+
+static ssize_t driver_read (struct file *file,
+			    char __user *buffer,
+			    size_t size,
+			    loff_t *offset)
+{
+	printk("driver_read: entry\n");
+	printk("driver_read: exit\n");
+	return 0;
+}
+
 static int mod_init (void)
 {
-	printk("hello world from mod_init\n");
+	printk("mod_init: entry\n");
+	driver_file_operations->read = driver_read;
+	custom_proc_node = proc_create("ldd_driver", 0, NULL, driver_file_operations);
+	printk("mod_init: exit\n");
 	return 0;
 }
 
 static void mod_exit (void)
 {
-	printk("exiting from mod_exit\n");
+	printk("mod_exit: entry\n");
+	proc_remove(custom_proc_node);
+	printk("mod_exit: exit\n");
 }
 
 module_init(mod_init);
