@@ -14,7 +14,6 @@ struct proc_dir_entry *proc_create(const char *name,
 */
 
 static struct proc_dir_entry *custom_proc_node;
-static struct file_operations *driver_file_operations;
 
 static ssize_t driver_read (struct file *file,
 			    char __user *buffer,
@@ -26,11 +25,14 @@ static ssize_t driver_read (struct file *file,
 	return 0;
 }
 
+static struct file_operations driver_file_operations = {
+	.read = driver_read
+};
+
 static int mod_init (void)
 {
 	printk("mod_init: entry\n");
-	driver_file_operations->read = driver_read;
-	custom_proc_node = proc_create("ldd_driver", 0, NULL, driver_file_operations);
+	custom_proc_node = proc_create("ldd_driver", 0, NULL, &driver_file_operations);
 	printk("mod_init: exit\n");
 	return 0;
 }
