@@ -25,6 +25,11 @@ static ssize_t driver_write (struct file *file,
 		printk("driver_write: exit\n");
 		copy_from_user(driver_buf, buffer, DRIVER_BUFFER_SIZE);
 		driver_buf[DRIVER_BUFFER_LEN] = 0;
+		// if we don't return size (even though we have truncated the message)
+		// we are going to have to handle another write system call and we don't
+		// want to because we have already committed ourselves to truncating so
+		// by doing this we make sure that we only have to handle one write;
+		// this makes sense for completing the echoing challenge
 		return size;
 	}
 	copy_from_user(driver_buf, buffer, size);
@@ -41,6 +46,8 @@ static ssize_t driver_read (struct file *file,
 	size_t const sz_driver_buf = 1 + strlen(driver_buf);
 	printk("driver_read: entry\n");
 	if (sz_driver_buf == *offset) {
+		// we have already copied to the userspace the entire message so we return
+		// zero bytes to indicate that there's nothing else to read
 		printk("driver_read: exit\n");
 		return 0;
 	}
