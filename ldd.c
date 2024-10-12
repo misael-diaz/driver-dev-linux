@@ -1,6 +1,7 @@
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/proc_fs.h>
+#include <linux/uaccess.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("misael-diaz");
@@ -20,9 +21,15 @@ static ssize_t driver_read (struct file *file,
 			    size_t size,
 			    loff_t *offset)
 {
+	char const msg[] = "awk!\n";
 	printk("driver_read: entry\n");
+	if (sizeof(msg) != (strlen(msg) + 1)) {
+		printk("driver_read: StringSizingError\n");
+		return 0;
+	}
+	copy_to_user(buffer, msg, sizeof(msg));
 	printk("driver_read: exit\n");
-	return 0;
+	return sizeof(msg);
 }
 
 static struct file_operations driver_file_operations = {
