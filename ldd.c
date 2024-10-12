@@ -7,13 +7,6 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("misael-diaz");
 MODULE_DESCRIPTION("Dynamically loadable Linux kernel module exercise");
 
-/*
-struct proc_dir_entry *proc_create(const char *name,
-				   umode_t mode,
-				   struct proc_dir_entry *parent,
-				   const struct file_operations *file_operations);
-*/
-
 static struct proc_dir_entry *p_driver_proc_node;
 
 static ssize_t driver_read (struct file *file,
