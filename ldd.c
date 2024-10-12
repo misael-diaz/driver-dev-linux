@@ -7,7 +7,30 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("misael-diaz");
 MODULE_DESCRIPTION("Dynamically loadable Linux kernel module exercise");
 
+#define DRIVER_BUFFER_SIZE 80
+#define DRIVER_BUFFER_LEN (DRIVER_BUFFER_SIZE - 1)
+
+static char driver_buf[DRIVER_BUFFER_SIZE];
 static struct proc_dir_entry *p_driver_proc_node;
+
+static ssize_t driver_write (struct file *file,
+			     const char __user *buffer,
+			     size_t size,
+			     loff_t *offset)
+{
+	printk("driver_write: entry\n");
+	printk("sz: %zu\n", size);
+	if (DRIVER_BUFFER_SIZE < size) {
+		printk("driver_write: message has been truncated\n");
+		printk("driver_write: exit\n");
+		copy_from_user(driver_buf, buffer, DRIVER_BUFFER_SIZE);
+		driver_buf[DRIVER_BUFFER_LEN] = 0;
+		return size;
+	}
+	copy_from_user(driver_buf, buffer, size);
+	printk("driver_write: exit\n");
+	return size;
+}
 
 static ssize_t driver_read (struct file *file,
 			    char __user *buffer,
@@ -15,34 +38,28 @@ static ssize_t driver_read (struct file *file,
 			    loff_t *offset)
 {
 	size_t rc = 0;
-	char const msg[] = "awk!\n";
+	size_t const sz_driver_buf = 1 + strlen(driver_buf);
 	printk("driver_read: entry\n");
-	if (sizeof(msg) != (strlen(msg) + 1)) {
-		printk("driver_read: StringSizingError\n");
-		return 0;
-	}
-
-	// after the first read we reach "EOF" sort to speak so we return zero to indicate
-	// that there are no more bytes left (to be read) in the userspace buffer
-	if (sizeof(msg) == *offset) {
+	if (sz_driver_buf == *offset) {
 		printk("driver_read: exit\n");
 		return 0;
 	}
 
-	rc = copy_to_user(buffer, msg, sizeof(msg));
+	rc = copy_to_user(buffer, driver_buf, sz_driver_buf);
 	if (rc) {
 		printk("driver_read: CopyError\n");
 		printk("driver_read: exit\n");
 		return 0;
 	}
 
-	*offset = sizeof(msg);
+	*offset = sz_driver_buf;
 	printk("driver_read: exit\n");
-	return sizeof(msg);
+	return sz_driver_buf;
 }
 
 static struct file_operations driver_file_operations = {
-	.read = driver_read
+	.read = driver_read,
+	.write = driver_write
 };
 
 static int mod_init (void)
