@@ -11,9 +11,9 @@ MODULE_DESCRIPTION("Dynamically loadable Linux kernel module exercise");
 #define DRIVER_BUFFER_LEN (DRIVER_BUFFER_SIZE - 1)
 
 static char driver_buf[DRIVER_BUFFER_SIZE];
-static struct proc_dir_entry *p_driver_proc_node;
+static struct proc_dir_entry *pde;
 
-static ssize_t driver_write (struct file *file,
+static ssize_t driver_write (struct file *filp,
 			     const char __user *buffer,
 			     size_t size,
 			     loff_t *offset)
@@ -37,7 +37,7 @@ static ssize_t driver_write (struct file *file,
 	return size;
 }
 
-static ssize_t driver_read (struct file *file,
+static ssize_t driver_read (struct file *filp,
 			    char __user *buffer,
 			    size_t size,
 			    loff_t *offset)
@@ -64,7 +64,7 @@ static ssize_t driver_read (struct file *file,
 	return sz_driver_buf;
 }
 
-static struct file_operations driver_file_operations = {
+static struct file_operations fop = {
 	.read = driver_read,
 	.write = driver_write
 };
@@ -72,7 +72,7 @@ static struct file_operations driver_file_operations = {
 static int mod_init (void)
 {
 	printk("mod_init: entry\n");
-	p_driver_proc_node = proc_create("ldd_driver", 0, NULL, &driver_file_operations);
+	pde = proc_create("ldd_driver", 0, NULL, &fop);
 	printk("mod_init: exit\n");
 	return 0;
 }
@@ -80,7 +80,7 @@ static int mod_init (void)
 static void mod_exit (void)
 {
 	printk("mod_exit: entry\n");
-	proc_remove(p_driver_proc_node);
+	proc_remove(pde);
 	printk("mod_exit: exit\n");
 }
 
