@@ -21,13 +21,29 @@ static ssize_t driver_read (struct file *file,
 			    size_t size,
 			    loff_t *offset)
 {
+	size_t rc = 0;
 	char const msg[] = "awk!\n";
 	printk("driver_read: entry\n");
 	if (sizeof(msg) != (strlen(msg) + 1)) {
 		printk("driver_read: StringSizingError\n");
 		return 0;
 	}
-	copy_to_user(buffer, msg, sizeof(msg));
+
+	// after the first read we reach "EOF" sort to speak so we return zero to indicate
+	// that there are no more bytes left (to be read) in the userspace buffer
+	if (sizeof(msg) == *offset) {
+		printk("driver_read: exit\n");
+		return 0;
+	}
+
+	rc = copy_to_user(buffer, msg, sizeof(msg));
+	if (rc) {
+		printk("driver_read: CopyError\n");
+		printk("driver_read: exit\n");
+		return 0;
+	}
+
+	*offset = sizeof(msg);
 	printk("driver_read: exit\n");
 	return sizeof(msg);
 }
